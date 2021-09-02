@@ -1,0 +1,38 @@
+# This file contains metadata for your plugin. Beginning
+# with version 1.8 this is the preferred way to supply information about a
+# plugin. The current method of embedding metadata in __init__.py will
+# be supported until version 2.0
+
+# This file should be included when you package your plugin.
+
+# Mandatory items:
+
+
+[general]
+name=PlanCreator 1.2
+qgisMinimumVersion=2.0
+qgisMaximumVersion=2.20
+description=For creation of building floor plans
+version=1.2
+
+# Optional items:
+
+# changelog=
+homepage=http://rintd.ru
+tracker=http://rintd.ru
+repository=ssh://gitolite@develop/bld-qgis.git
+
+# tags are comma separated with spaces allowed
+tags=python, development, developer, building
+
+#icon=icon.png
+icon=PlanCreator.png
+
+experimental=True
+
+# deprecated flag (applies to the whole plugin, not just a single version
+deprecated=False
+
+# Author contact information
+author=Marat Galiullin
+email=m.a.galiullin@gmail.com
