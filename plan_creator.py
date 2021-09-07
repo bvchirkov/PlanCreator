@@ -366,10 +366,9 @@ class PlanCreator:
         src = os.path.join(os.path.dirname(QgsApplication.qgisUserDatabaseFilePath()), "python", "plugins", PROJECT_NAME, "layers", name)
         dst = shutil.copy(src + ".shp", os.path.join(home_dir, "{}-{}.shp".format(name, suffix)))
         shutil.copy(src + ".shx", os.path.join(home_dir, "{}-{}.shx".format(name, suffix)))
-        shutil.copy(src + ".qpj", os.path.join(home_dir, "{}-{}.qpj".format(name, suffix)))
         shutil.copy(src + ".prj", os.path.join(home_dir, "{}-{}.prj".format(name, suffix)))
         shutil.copy(src + ".dbf", os.path.join(home_dir, "{}-{}.dbf".format(name, suffix)))
-        dst_style = shutil.copy(src + ".qml", os.path.join(home_dir, "{}-{}.qml".format(name, suffix)))
+        shutil.copy(src + ".qml", os.path.join(home_dir, "{}-{}.qml".format(name, suffix)))
         dst_ui = shutil.copy(src + ".ui", os.path.join(home_dir, "{}.ui".format(name)))
 
         #Добавляем слои в проект
@@ -423,7 +422,8 @@ class PlanCreator:
 
     def run_create_json(self) -> None:
         topo = CreateTopo(PROJECT_NAME, self.iface)
-        topo.makeTopo()
+        topo.fill_ids()
+        topo.make_topo()
 
     def printInfo(self, text) -> None:
         self.iface.messageBar().pushMessage("Info", text, level=Qgis.Info, duration=10)

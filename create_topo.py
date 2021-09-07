@@ -7,24 +7,51 @@ from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.core import (
     QgsProject,
     QgsMapLayer,
+    QgsMapLayerType,
+    QgsVectorLayer,
     QgsVectorDataProvider,
     QgsWkbTypes,
     QgsPointXY,
     Qgis
 )
 
-# class Door():
-#     def __init__(self, lid, layers, ) -> None:
-#         self.lid = lid
-#         self.layers = layers
-#         self.id = id
-#         self.room_a = room_a
-#         self.room_b = room_b
+TRANSITS    = 'doors'
+ZONES       = 'rooms'
+STAIRS      = 'stairs'
 
+class Transit():
+    # fields
+    __id_str__          = 'id'
+    __room_a_str__      = 'roomA'
+    __room_b_str__      = 'roomB'
+    __size_z_str__      = 'sizeZ'
+    __door_way_str__    = 'doorWay'
+    __width_str__       = 'width'
+
+    def __init__(self, layer:QgsVectorLayer):
+        self.layer = layer
+
+        self.idIdx     = None
+        self.roomAIdx  = None
+        self.roomBIdx  = None
+        self.sizeZ     = None
+        self.doorWay   = None
+        self.width     = None
+        self.get_indexes()
+
+    def get_indexes(self):
+        f_idx = lambda field_name: self.layer.fields().indexOf(field_name)
+
+        self.idIdx     = f_idx(self.__id_str__)
+        self.roomAIdx  = f_idx(self.__room_a_str__)
+        self.roomBIdx  = f_idx(self.__room_b_str__)
+        self.sizeZ     = f_idx(self.__size_z_str__)
+        self.doorWay   = f_idx(self.__door_way_str__)
+        self.width     = f_idx(self.__width_str__)
 
 
 class CreateTopo():
-    
+
     #Конструктор
     def __init__(self, proj_name, iface):
         # Save reference to the QGIS interface
@@ -33,8 +60,7 @@ class CreateTopo():
     
     #--------------------------------------------------------------------------
     # Поиск элемента в массие bes в заданным beId
-    # Если элемент находится, то возвращается,
-    # иначе создается новый элмент
+    # Если элемент находится, то возвращается, иначе создается новый элмент
     #--------------------------------------------------------------------------
     def findBuildElement(self, bes, beId):
         #Поищем уже имеющиеся BuildElements в массиве bes с заданным id
@@ -50,9 +76,6 @@ class CreateTopo():
     
     #--------------------------------------------------------------------------
     # Формирование подструктуры, хранящей координаты элемента
-    # Переделал под возможности библиотеки GpCore, потому что она не пока умеет
-    # рабоатать с большой вложенностью массивов, а при прямом сохранении 
-    # геометрии получается 3 уровня вложенности.
     #--------------------------------------------------------------------------
     def createXYTopo(self, polygon, elementField) -> None:
         elementField["XY"] = []                     # будущий массив колец
@@ -68,13 +91,13 @@ class CreateTopo():
     # Создание топологии в уровнях
     # (Выполняется обход каждого уровня, а некоторых не поразу)
     #--------------------------------------------------------------------------
-    def makeTopo(self) -> None:
+    def make_topo(self) -> None:
         #get Map Registry
-        reg = QgsProject.instance()
-        print("Number of Layers: " + str(reg.count()))
+        proj = QgsProject.instance()
+        # print("Number of Layers: " + str(reg.count()))
 
         #get list (HashMap) of all layers on the map { internal-id : layer }
-        mls = reg.mapLayers()
+        mls = proj.mapLayers()
 
         layerNames = []     #list of layer names
         layersHM = {}       #HashMap of layers by floors
@@ -82,7 +105,7 @@ class CreateTopo():
         #Создадим свою поэтажную струткутру HashMap для удобства
         #{ floor : { type : internal-id }}  floor=01, 02, etc;   type=rooms, doors, stairs
         for lid in mls.keys():
-            if mls[lid].type() == QgsMapLayer.RasterLayer:
+            if mls[lid].type() == QgsMapLayerType.RasterLayer:
                 continue
             layerNames.append(mls[lid].name())  #добавим имя в список
             floor = layerNames[-1][-2:]         #вычленим последние ДВА символа у имени слоя
@@ -92,8 +115,8 @@ class CreateTopo():
                 layersHM[floor][elemType] = mls[lid].id()   #можно было просто присвоить lid))
             else:
                 layersHM[floor] = {elemType : mls[lid].id()}
-        print(layerNames)
-        print(layersHM)
+        # print(layerNames)
+        # print(layersHM)
 
         #--------------------------------------------------------------------------
         # Для каждого уровня найдем пересечения дверей с другими слоями (комнатами, 
@@ -104,19 +127,18 @@ class CreateTopo():
             doorsLID = layersHM[floor]['doors']
             roomsLID = layersHM[floor]['rooms']
             stairsLID = layersHM[floor]['stairs']
-            # devicesLID = layersHM[floor]['devices']
             #Получим слои дверей, комнат и лест.клеток на данном этаже
-            doors = reg.mapLayer(doorsLID)
-            rooms = reg.mapLayer(roomsLID)
-            stairs = reg.mapLayer(stairsLID)
-            # devices = reg.mapLayer(devicesLID)
+            doors = proj.mapLayer(doorsLID)
+            rooms = proj.mapLayer(roomsLID)
+            stairs = proj.mapLayer(stairsLID)
             #Получим индексы(позиции) интересующих полей в таблицах аттрибутов слоев
-            doorsRoomAIdx   = doors.fields().indexOf('roomA')
-            doorsRoomBIdx   = doors.fields().indexOf('roomB')
-            doorsIdIdx      = doors.fields().indexOf('id')
-            roomsIdIdx      = rooms.fields().indexOf('id')
-            stairsIdIdx     = stairs.fields().indexOf('id')
-            # devicesOwnerIdx = devices.fields().indexOf('owner')
+            doorsRoomAIdx   = self.get_field_index(doors, 'roomA')
+            doorsRoomBIdx   = self.get_field_index(doors, 'roomB')
+            doorsIdIdx      = self.get_field_index(doors, 'id')
+            roomsIdIdx      = self.get_field_index(rooms, 'id')
+            stairsIdIdx     = self.get_field_index(stairs, 'id')
+
+            tr = Transit(doors)
 
             #For all doors on the same floor
             #features - список объектов слоя
@@ -128,7 +150,7 @@ class CreateTopo():
                 caps = doors.dataProvider().capabilities()
                 fid = f.id()    #feature id
                 #Clear roomA & roomB (Почистим информацию в полях roomA & roomB)
-                attrs = { doorsRoomAIdx : None, doorsRoomBIdx : None }
+                attrs = { tr.roomAIdx : None, tr.roomBIdx : None }
                 #Надеемся на возможность прямой записи в таблицу аттрибутов слоя
                 if caps & QgsVectorDataProvider.ChangeAttributeValues:
                     doors.dataProvider().changeAttributeValues({ fid : attrs })
@@ -141,20 +163,20 @@ class CreateTopo():
                     geomOther = of.geometry()   #получим геометрию объекта-комнаты
                     if geom.intersects(geomOther):
                         intersectsCount = intersectsCount + 1
-                        print("Room Intersects!!!")
+                        # print("Room Intersects!!!")
                         roomId = of.attributes()[roomsIdIdx]    #получим id пересекаемой комнаты
-                        print(roomId)
-                        print("roomA: ", f.attributes()[doorsRoomAIdx])
-                        print("roomB: ", f.attributes()[doorsRoomBIdx])
+                        # print(roomId)
+                        # print("roomA: ", f.attributes()[doorsRoomAIdx])
+                        # print("roomB: ", f.attributes()[doorsRoomBIdx])
                         if caps & QgsVectorDataProvider.ChangeAttributeValues:
                             if intersectsCount == 1:
                                 attrs = { doorsRoomAIdx : roomId}
-                                print("roomA: ", roomId)
+                                # print("roomA: ", roomId)
                             elif intersectsCount == 2:
                                 attrs = { doorsRoomBIdx : roomId}
-                                print("roomB: ", roomId)
+                                # print("roomB: ", roomId)
                             else:
-                                print("!!! Triple Intersect !!!")
+                                # print("!!! Triple Intersect !!!")
                                 break
                             #Запишем в аттибуты дверей поля roomA или roomB
                             doors.dataProvider().changeAttributeValues({ fid : attrs })
@@ -171,7 +193,7 @@ class CreateTopo():
                             if intersectsCount == 1:
                                 attrs = { doorsRoomAIdx : stairId}
                                 #print "roomA: ", stairId
-                            elif intersectsCount ==2:
+                            elif intersectsCount == 2:
                                 attrs = { doorsRoomBIdx : stairId}
                                 #print "roomB: ", stairId
                             else:
@@ -192,7 +214,7 @@ class CreateTopo():
         for i in range(len(sortedFloors)):  #i=[0,...,ЧислоЭтажей-1]
             floor = sortedFloors[i]
             stairsLID = layersHM[floor]['stairs']
-            stairs = reg.mapLayer(stairsLID)
+            stairs = proj.mapLayer(stairsLID)
             caps = stairs.dataProvider().capabilities()
             stairsIdIdx = stairs.fields().indexOf('id')
             stairsS_idIdx = stairs.fields().indexOf('s_id')
@@ -200,7 +222,7 @@ class CreateTopo():
             stairsDownIdx = stairs.fields().indexOf('down')
             if i > 0: #Если это не самый нижний этаж, то вычислим этаж пониже
                 floorUnder = sortedFloors[i-1]
-                stairsUnder = reg.mapLayer(layersHM[floorUnder]['stairs'])
+                stairsUnder = proj.mapLayer(layersHM[floorUnder]['stairs'])
                 sUIdIdx = stairsUnder.fields().indexOf('id')
                 sUS_idIdx = stairsUnder.fields().indexOf('s_id')
                 sUUpIdx = stairsUnder.fields().indexOf('up')
@@ -245,22 +267,17 @@ class CreateTopo():
         #--------------------------------------
         # Creating Buillding structure for future export to VMjson
         #--------------------------------------
-        
-        #Генеграция идентификаторов для чтения json в c++ GpCore
-        doorSignUUID = "39baaad1-3bea-4220-ac34-70e3021e4cc8"
-        roomSignUUID = "9a9d5f7b-bd3d-433e-80ee-25403e857896"
-        stairSignUUID = "ffef2dae-a46c-42b7-aa4f-86507d7f8acc"
-                
-        proj = QgsProject.instance()
         nameOfBuilding = proj.readEntry(self.proj_name, "nameBuilding", u'Здание номер 1')[0]
         streetOfAddress = proj.readEntry(self.proj_name, "streetAddress", u'Университетская улица, дом 1')[0]
         city = proj.readEntry(self.proj_name, "city", u'Ижевск')[0]
+        additionalInfo = proj.readEntry(self.proj_name, "additionalInfo", u'Дополнительная информация')[0]
         
         bld = { "NameBuilding":nameOfBuilding, "Address":{}, "Level":[], "Devs":[]}
 
-        bld["Address"]["City"] = city
-        bld["Address"]["StreetAddress"] = streetOfAddress
-        bld["Address"]["AddInfo"] = "Additional information"
+        bld_address = bld["Address"]
+        bld_address["City"] = city
+        bld_address["StreetAddress"] = streetOfAddress
+        bld_address["AddInfo"] = additionalInfo
         
         for floor in sorted(layersHM):
             bld["Level"].append({})
@@ -272,9 +289,9 @@ class CreateTopo():
             roomsLID = layersHM[floor]['rooms']
             stairsLID = layersHM[floor]['stairs']
             
-            doors = reg.mapLayer(doorsLID)
-            rooms = reg.mapLayer(roomsLID)
-            stairs = reg.mapLayer(stairsLID)
+            doors = proj.mapLayer(doorsLID)
+            rooms = proj.mapLayer(roomsLID)
+            stairs = proj.mapLayer(stairsLID)
             
             bld["Level"][-1]["NameLevel"] = rooms.customProperty("nameLevel", bld["Level"][-1]["NameLevel"])
             bld["Level"][-1]["ZLevel"] = float(rooms.customProperty("zLevel", bld["Level"][-1]["ZLevel"]))
@@ -301,10 +318,10 @@ class CreateTopo():
             features = doors.getFeatures()
             doorSerialNumber = 0
             for f in features:
-                id = f.attributes()[doorsIdIdx][1:-1]       #[1:-1] - обрезам фигурные скобки
-                roomA = f.attributes()[doorsRoomAIdx][1:-1]
+                id = self.cut_brackets(f.attributes()[doorsIdIdx])
+                roomA = self.cut_brackets(f.attributes()[doorsRoomAIdx])
                 roomB = f.attributes()[doorsRoomBIdx]
-                if (roomB != None): roomB = roomB[1:-1]
+                if (roomB != None): roomB = self.cut_brackets(roomB)
                 doorSizeZ = f.attributes()[doorsSizeZIdx]
                 doorWay = f.attributes()[doorsDoorWayIdx]
                 #doorType = "DoorWayOut" if roomB == None else "DoorWayInt"
@@ -315,10 +332,6 @@ class CreateTopo():
                 #Добавим BuildElement для данной двери
                 doorSerialNumber = doorSerialNumber + 1
                 bld["Level"][-1]["BuildElement"].append({})
-                
-				#boris-code ---start
-                bld["Level"][-1]["BuildElement"][-1]["@"] = doorSignUUID
-				#boris-code end-----
 
                 #Определимся с типом двери
                 if roomB == None:
@@ -348,7 +361,6 @@ class CreateTopo():
                         bld["Level"][-1]["BuildElement"][-1]["Name"] = bld["Level"][-1]["BuildElement"][-1]["Name"] + roomB[-5:]
                         bld["Level"][-1]["BuildElement"][-1]["Output"].append(roomB)
 
-                print(geom.type(), QgsWkbTypes.PolygonGeometry)
                 if geom.type() == QgsWkbTypes.PolygonGeometry:
                     self.createXYTopo(geom.asMultiPolygon(), bld["Level"][-1]["BuildElement"][-1])
                          
@@ -368,18 +380,14 @@ class CreateTopo():
             features = rooms.getFeatures()
             roomSerialNumber = 0
             for f in features:
-                id = f.attributes()[roomsIdIdx][1:-1]
+                id = self.cut_brackets(f.attributes()[roomsIdIdx])
                 roomSizeZ = f.attributes()[roomsSizeZIdx]
                 geom = f.geometry()
                 roomSerialNumber = roomSerialNumber + 1
                 #Поищем уже имеющиеся BuildElements с заданным id или создастся новый
                 currBE = self.findBuildElement(bld["Level"][-1]["BuildElement"], id)
-                #Заполним поля для комнаты
-				
-				#boris-code ---start
-                currBE["@"] = roomSignUUID;
-				#boris-code end-----
 
+                #Заполним поля для комнаты
                 currBE["Name"] = f.attributes()[roomsNameIdx] + " (" + floor + " : "+ id[-5:]+")"
                 currBE["Sign"] = "Room"
                 if roomSizeZ == None:
@@ -396,24 +404,20 @@ class CreateTopo():
             features = stairs.getFeatures()
             stairSerialNumber = 0
             for f in features:
-                id = f.attributes()[stairsIdIdx][1:-1]
+                id = self.cut_brackets(f.attributes()[stairsIdIdx])
                 up = f.attributes()[stairsUpIdx]
                 down = f.attributes()[stairsDownIdx]
                 stairSizeZ = f.attributes()[stairsSizeZIdx]
                 #Исправляем UUID - убираем фигурные скобки в начале и в конце
-                if up != None: up = up[1:-1]
-                if down != None: down = down[1:-1]
+                if up != None: up = self.cut_brackets(up)
+                if down != None: down = self.cut_brackets(down)
                 
                 geom = f.geometry()
                 stairSerialNumber = stairSerialNumber + 1
                 #Поищем уже имеющиеся BuildElements с заданным id или создастся новый
                 currBE = self.findBuildElement(bld["Level"][-1]["BuildElement"], id)
+
                 #Заполним поля для Лестничных площадок
-
-				#boris-code ---start
-                currBE["@"] = stairSignUUID
-				#boris-code end-----
-
                 currBE["Name"] = u'Лестничная площадка (' + floor + " : "+ id[-5:]+")"
                 currBE["Sign"] = "Staircase"
                 if stairSizeZ == None:
@@ -443,21 +447,16 @@ class CreateTopo():
             #Пробежимся по лестничным площадкам еще раз, чтобы вставить фиктивные межэтажные дверные проемы
             features = stairs.getFeatures()
             for f in features:
-                id = f.attributes()[stairsIdIdx][1:-1]
+                id = self.cut_brackets(f.attributes()[stairsIdIdx])
                 up = f.attributes()[stairsUpIdx]
                 down = f.attributes()[stairsDownIdx]
                 geom = f.geometry()
                 if up != None:
-                    up = up[1:-1]
+                    up = self.cut_brackets(up)
 
                     doorId = str(uuid.uuid4()) #сгенерим новый uuid для нового фиктивного проема
                     doorBE = self.findBuildElement(bld["Level"][-1]["BuildElement"], doorId)    #Создадим новый buildElement
 					
-					#boris-code ---start
-                    doorBE["@"] = doorSignUUID
-					#boris-code end-----
-
-                    #doorBE["Name"] = "virtual DoorWay between stairs"
                     doorBE["Sign"] = "DoorWay"  #тип помещения - Дверной проем
                     #сделаем ссылки от нового дверного проема
                     doorBE["Output"] = [id]         #ссылка вниз
@@ -478,7 +477,7 @@ class CreateTopo():
                     
                 #Здесь по-сложнее связь сделать с нижним фиктивным дверным пролетом
                 if down != None:
-                    down = down[1:-1]
+                    down = self.cut_brackets(down)
                     currBE = self.findBuildElement(bld["Level"][-1]["BuildElement"], id)
                     #--------------------------------------------ToDo-----------
                     #предыдущий этаж скорее всего bld["Level"][-2]["BuildElement"]
@@ -496,6 +495,9 @@ class CreateTopo():
         nameOfJsonFile = QFileDialog.getSaveFileName(None, u'Сохранить BuildingJson как...', proj.homePath(), "JSON file (*.json *.JSON)")[0]
         if nameOfJsonFile == "":
             return
+        if not nameOfJsonFile.endswith('.json'):
+            nameOfJsonFile.join('.json')
+
         jsonFile = open(nameOfJsonFile, 'w')
         json.dump(bld, jsonFile, ensure_ascii=True, cls=myJSONEncoder, indent=3)
         jsonFile.close()
@@ -506,13 +508,39 @@ class CreateTopo():
         # mb.setStandardButtons(QMessageBox.Ok)
         # #mb.setDetailedText(jsonStr)
         # mb.exec_()
+    
+    def get_field_index(self, layer:QgsVectorLayer, field_name:str) -> int:
+        return layer.fields().indexOf(field_name)
+
+    def cut_brackets(self, id:str) -> str:
+        return id[1:-1] if id.startswith('{') and id.endswith('}') else id
+    
+    def fill_ids(self):
+        '''
+        Формирование уникальных идентификаторов для всех объектов всех слоев перед выгрузкой
+        '''
+        #get Map Registry
+        proj = QgsProject.instance()
+        mls = proj.mapLayers()
+
+        for lid in mls.keys():
+            layer:QgsMapLayer = mls[lid]
+            if layer.type() == QgsMapLayerType.RasterLayer:
+                continue
+            if layer.isModified():
+                # Сохранение всех изменений перед выгрузкой, чтобы обновились индексы объектов слоя
+                layer.commitChanges(stopEditing=False)
+
+            feature_idx_id:int = self.get_field_index(layer, 'id')
+            for feature in layer.getFeatures():
+                layer.dataProvider().changeAttributeValues({ feature.id() : {feature_idx_id: '{}'.format(str(uuid.uuid4()))} })
+            layer.updateFields()
+
 
 class myJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        # print(type(obj).__name__)
         if isinstance(obj, QgsPointXY):
             return [obj.x(), obj.y()]
         elif isinstance(obj, QVariant):
-            # print(obj.isNull())
             return None
         return json.JSONEncoder.default(self, obj)
