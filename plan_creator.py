@@ -206,21 +206,21 @@ class PlanCreator:
     def initGui(self) -> None:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/{}/icon.png'.format(PROJECT_NAME)
+        icon_path = ':/plugins/{}/icon_b.png'.format(PROJECT_NAME)
         self.add_action(
             icon_path,
             text=self.tr(u'Начать новый проект BuildingJSON'),
             callback=self.run_create_project,
             parent=self.iface.mainWindow())
 
-        icon_path = ':/plugins/{}/icon.png'.format(PROJECT_NAME)
+        icon_path = ':/plugins/{}/icon_l.svg'.format(PROJECT_NAME)
         self.add_action(
             icon_path,
             text=self.tr(u'Добавить новый уровень'),
             callback=self.run_create_level,
             parent=self.iface.mainWindow())
         
-        icon_path = ':/plugins/{}/icon.png'.format(PROJECT_NAME)
+        icon_path = ':/plugins/{}/icon_j.png'.format(PROJECT_NAME)
         self.add_action(
             icon_path,
             text=self.tr(u'Создать JSON'),
@@ -243,7 +243,7 @@ class PlanCreator:
         
         # See if CANCEL was pressed
         if not result:
-            self.printCrit(u'Новый проект не создан')
+            self.print_crit(u'Новый проект не создан')
             return
 
         # See if Ok was pressed
@@ -270,20 +270,20 @@ class PlanCreator:
 
         # New filename for project
         prefix:str = None
-        postfix:str = ""
+        suffix:str = ""
         if platform.startswith('linux'):
             prefix = "~/"
-            postfix = ".qgs"
+            suffix = ".qgs"
         elif platform.startswith('win32'):
             prefix = "c:\\"
 
         projFileName = list(QFileDialog.getSaveFileName(None, u'Сохранить проект как...', prefix, "Project file (*.qgs *.QGS)"))[0]
 
         if projFileName == "":
-            self.printCrit(u'Новый проект не создан. Необходимо указать название проекта')
+            self.print_crit(u'Новый проект не создан. Необходимо указать название проекта')
             return
         else:
-            projFileName = "{}{}".format(projFileName, postfix if not projFileName.endswith(".qgs") else "")
+            projFileName = "{}{}".format(projFileName, suffix if not projFileName.endswith(".qgs") else "")
         
         #Create new project
         self.iface.newProject(True)
@@ -306,10 +306,10 @@ class PlanCreator:
         # Save project to disk 
         if myProject.write():
             # print("Project saved as: " + projFileName)
-            self.printInfo(u'Новый проект создан успешно. ({})'.format(projFileName))
+            self.print_info(u'Новый проект создан успешно. ({})'.format(projFileName))
         else:
             # print("Project not saved for same reason")
-            self.printCrit(u'Не удалось сохранить проект. Попробуйте выбрать другое место сохранения. ({})'.format(projFileName))
+            self.print_crit(u'Не удалось сохранить проект. Попробуйте выбрать другое место сохранения. ({})'.format(projFileName))
             
     def run_create_level(self) -> None:
         """Run method that performs all the real work"""
@@ -319,7 +319,8 @@ class PlanCreator:
         
         # See if CANCEL was pressed
         if not result:
-            pass
+            self.print_info(u'Новый уровень не добавлен')
+            return
 
         #Номер следующего этажа
         if self.BimLevelCount == None:
@@ -344,7 +345,7 @@ class PlanCreator:
         myProject = QgsProject.instance()
         #Проверим, что проект создан правильно (что это наш проект)
         if myProject.readEntry(PROJECT_NAME, "projectkey", "noname")[0] != "{} {}".format(PROJECT_NAME, PROJECT_VERSION):
-            self.printCrit(u'Сначала необходимо создать проект для {}!'.format(PROJECT_NAME))
+            self.print_crit(u'Сначала необходимо создать проект для {}!'.format(PROJECT_NAME))
             return
 
         #Скопируем шаблон уровня shp в папку проекта с переименовкой
@@ -376,7 +377,7 @@ class PlanCreator:
         new_layer = QgsVectorLayer(dst, name_leyer, "ogr")
                 
         if not new_layer or not new_layer.isValid():
-            self.printCrit("Не удалось загрузить слой {}".format(name_leyer))
+            self.print_crit("Не удалось загрузить слой {}".format(name_leyer))
             return
 
         QgsProject.instance().addMapLayer(new_layer, False)
@@ -425,11 +426,11 @@ class PlanCreator:
         topo.fill_ids()
         topo.make_topo()
 
-    def printInfo(self, text) -> None:
+    def print_info(self, text) -> None:
         self.iface.messageBar().pushMessage("Info", text, level=Qgis.Info, duration=10)
 
-    def printWarn(self, text) -> None:
+    def print_warn(self, text) -> None:
         self.iface.messageBar().pushMessage("Warning", text, level=Qgis.Warning, duration=10)
         
-    def printCrit(self, text) -> None:
+    def print_crit(self, text) -> None:
         self.iface.messageBar().pushMessage("Critical", text, level=Qgis.Critical, duration=10)
