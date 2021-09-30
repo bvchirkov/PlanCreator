@@ -1,7 +1,7 @@
 <RCC>
-    <qresource prefix="/plugins/PlanCreator" >
+    <qresource prefix="/plugins/PlanCreator3">
         <file>icon_b.png</file>
-        <file>icon_l.svg</file>
+        <file>icon_l.png</file>
         <file>icon_j.png</file>
     </qresource>
 </RCC>

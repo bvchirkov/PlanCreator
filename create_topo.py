@@ -489,25 +489,18 @@ class CreateTopo():
                         if currBE["Output"][oi] == down:
                             currBE["Output"][oi] = downStairBE["Up"]        
         
-        #jsonStr = json.dumps(bld, ensure_ascii=False, cls=myJSONEncoder, indent=3)
-        ###print jsonStrDev
-        #print repr(dev)
-        nameOfJsonFile = QFileDialog.getSaveFileName(None, u'Сохранить BuildingJson как...', proj.homePath(), "JSON file (*.json *.JSON)")[0]
+        # ---------
+        nameOfJsonFile = list(QFileDialog.getSaveFileName(None, u'Сохранить BuildingJson как...', proj.homePath(), "JSON file (*.json *.JSON)"))[0]
         if nameOfJsonFile == "":
             return
-        if not nameOfJsonFile.endswith('.json'):
-            nameOfJsonFile.join('.json')
 
+        if not nameOfJsonFile.endswith('.json'):
+            nameOfJsonFile = '{}{}'.format(nameOfJsonFile, '.json')
+            
         jsonFile = open(nameOfJsonFile, 'w')
         json.dump(bld, jsonFile, ensure_ascii=True, cls=myJSONEncoder, indent=3)
         jsonFile.close()
         self.iface.messageBar().pushMessage("Info", u'Файл JSON успешно создан.', level=Qgis.Info, duration=10)
-        # mb = QMessageBox()
-        # mb.setText(u'Файл JSON успешно создан.')
-        # #mb.setInformativeText(u'Нажмите кнопку ПОКАЗАТЬ ПОДРОБНОСТИ')
-        # mb.setStandardButtons(QMessageBox.Ok)
-        # #mb.setDetailedText(jsonStr)
-        # mb.exec_()
     
     def get_field_index(self, layer:QgsVectorLayer, field_name:str) -> int:
         return layer.fields().indexOf(field_name)

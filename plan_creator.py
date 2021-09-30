@@ -51,12 +51,12 @@ import os
 import uuid
 import shutil
 
-PROJECT_VERSION_MAJOR = 0
+PROJECT_VERSION_MAJOR = 3
 PROJECT_VERSION_MINOR = 1
 PROJECT_VERSION_PATCH = 0
 PROJECT_VERSION = "v{}.{}.{}".format(PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH)
 
-PROJECT_NAME = "PlanCreator"
+PROJECT_NAME = u'PlanCreator3'
 
 class PlanCreator:
     """QGIS Plugin Implementation."""
@@ -87,7 +87,7 @@ class PlanCreator:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Plan Creator')
+        self.menu = self.tr(PROJECT_NAME)
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -126,7 +126,7 @@ class PlanCreator:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('PlanCreator', message)
+        return QCoreApplication.translate(PROJECT_NAME, message)
 
 
     def add_action(
@@ -213,7 +213,7 @@ class PlanCreator:
             callback=self.run_create_project,
             parent=self.iface.mainWindow())
 
-        icon_path = ':/plugins/{}/icon_l.svg'.format(PROJECT_NAME)
+        icon_path = ':/plugins/{}/icon_l.png'.format(PROJECT_NAME)
         self.add_action(
             icon_path,
             text=self.tr(u'Добавить новый уровень'),
@@ -231,7 +231,7 @@ class PlanCreator:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&Plan Creator'),
+                self.tr(PROJECT_NAME),
                 action)
             self.iface.removeToolBarIcon(action)
 
