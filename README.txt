@@ -1,11 +1,3 @@
-Plugin Builder Results
-
-Your plugin PlanCreator was created in:
-    /home/boris/workspace/qgis/dev/plan_creator
-
-Your QGIS plugin directory is located at:
-    /home/boris/.local/share/QGIS/QGIS3/profiles/default/python/plugins
-
 What's Next:
 
   * Copy the entire directory containing your new plugin to the QGIS plugin
