@@ -1,0 +1,22 @@
+# Ignore all
+*
+
+# Don't ignore
+!*.py
+!*.qrc
+!*.txt
+!*.ui
+!icon_?.png
+
+!layers
+!layers/*
+!scripts
+!scripts/*
+!icons
+!icons/*
+
+!Makefile
+!pylintrc
+!pb_tool.cfg
+!.gitignore
+
