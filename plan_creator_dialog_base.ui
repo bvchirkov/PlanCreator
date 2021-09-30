@@ -48,7 +48,7 @@
     <locale language="Russian" country="Russia"/>
    </property>
    <property name="text">
-    <string>Удмуртский государственный университет</string>
+    <string/>
    </property>
    <property name="placeholderText">
     <string>Удмуртский государственный университет</string>
@@ -73,7 +73,7 @@
      <x>10</x>
      <y>43</y>
      <width>381</width>
-     <height>211</height>
+     <height>151</height>
     </rect>
    </property>
    <property name="title">
@@ -89,7 +89,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Ижевск</string>
+     <string/>
     </property>
     <property name="placeholderText">
      <string>Ижевск</string>
@@ -144,7 +144,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Университетская</string>
+     <string/>
     </property>
     <property name="placeholderText">
      <string>Университетская</string>
@@ -160,52 +160,52 @@
      </rect>
     </property>
     <property name="text">
-     <string>1, к6</string>
+     <string/>
     </property>
     <property name="placeholderText">
      <string>1, к6</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="QTextAdditionalInfo">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>150</y>
-      <width>251</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="plainText">
-     <string>Дополнительная информация 
-по объекту</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_5">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>152</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Дополнительная </string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_6">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>170</y>
-      <width>91</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>информация</string>
-    </property>
-   </widget>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>202</y>
+     <width>101</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Дополнительная </string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_6">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>220</y>
+     <width>91</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>информация</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="QTextAdditionalInfo">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>200</y>
+     <width>251</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="plainText">
+    <string>
+</string>
+   </property>
   </widget>
  </widget>
  <resources/>

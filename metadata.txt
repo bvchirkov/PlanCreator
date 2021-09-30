@@ -3,9 +3,9 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Plan Creator
+name=Plan Creator 3
 qgisMinimumVersion=3.0
-description=Инструмент создания пространственно-информационной модели здания
+description=Инструмент создания цифровой модели здания
 version=0.1
 author=bvchirkov
 email=b.v.chirkov@udsu.ru
@@ -23,7 +23,7 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=cad
+tags=cad, bim
 
 homepage=https://github.com/bvchirkov/PlanCreator
 category=Plugins

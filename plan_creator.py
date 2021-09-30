@@ -236,7 +236,6 @@ class PlanCreator:
             self.iface.removeToolBarIcon(action)
 
     def run_create_project(self) -> None:
-        """Run method that performs all the real work"""
         self.dlg = PlanCreatorDialogCreateProj()
         self.dlg.show() # show the dialog
         result = self.dlg.exec_() # Run the dialog event loop
@@ -389,37 +388,15 @@ class PlanCreator:
         prop.setValue("zLevel", self.QLevelHeight)
         prop.setValue("sizeZ", self.QFloorHeight if not name == "doors" else self.QTransitHeight)
         new_layer.setCustomProperties(prop)
-
-        # new_layer.featureAdded.connect(self.SIGNAL_feature_added)
         new_layer.setCrs(QgsCoordinateReferenceSystem('EPSG:3395'))
-
         new_layer.loadDefaultStyle() # Must before `layer.setEditFormConfig`
-        # new_layer.loadNamedStyle(dst_style)
 
         edit_form_config = QgsEditFormConfig()
         edit_form_config.setLayout(QgsEditFormConfig.EditorLayout.UiFileLayout)
         edit_form_config.setUiForm(dst_ui)
         new_layer.setEditFormConfig(edit_form_config)
         
-        # field_id = QgsField(name = 'id', 
-        #                     type = QVariant.String,
-        #                     typeName = 'string',
-        #                     len = 40, 
-        #                     prec = 0,
-        #                     comment = '',
-        #                     subType = QVariant.Invalid)
-        # new_layer.addExpressionField('uuid()', field_id)
         return new_layer
-
-    # def SIGNAL_feature_added(self, fid):
-    #     active_layer:QgsVectorLayer = self.iface.activeLayer()
-    #     feature:QgsFeature = active_layer.getFeature(fid)
-    #     attr_idx:int = feature.fieldNameIndex('id')
-    #     feature.setAttribute(attr_idx, uuid.uuid4())
-    #     # attrs = { attr_idx : uuid.uuid4()}
-    #     # active_layer.dataProvider().changeAttributeValues({ fid : attrs })
-    #     active_layer.updateFields()
-    #     print(fid, attr_idx, feature.id(), feature.isValid(), feature.attribute('id'))
 
     def run_create_json(self) -> None:
         topo = CreateTopo(PROJECT_NAME, self.iface)

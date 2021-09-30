@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>220</width>
+    <width>233</width>
     <height>120</height>
    </rect>
   </property>
@@ -23,7 +23,7 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>sizeZ</string>
+      <string>Высота</string>
      </property>
     </widget>
    </item>
