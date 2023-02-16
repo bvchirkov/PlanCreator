@@ -3,10 +3,10 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Plan Creator 3
+name=Plan Creator
 qgisMinimumVersion=3.0
 description=Инструмент создания цифровой модели здания
-version=0.1
+version=1.0
 author=bvchirkov
 email=b.v.chirkov@udsu.ru
 

@@ -12,14 +12,12 @@ from qgis.core import (
     QgsVectorDataProvider,
     QgsWkbTypes,
     QgsPointXY,
-    Qgis,
-    QgsMessageLog
+    Qgis
 )
-import time
 
-TRANSITS, ZONES, STAIRS = ('doors', 'rooms', 'stairs')
-
-BUILDINGJSON_VERSION = 20230216
+TRANSITS    = 'doors'
+ZONES       = 'rooms'
+STAIRS      = 'stairs'
 
 class Transit():
     # fields
@@ -52,14 +50,14 @@ class Transit():
         self.width     = f_idx(self.__width_str__)
 
 
-class CreateTopo():
+class CreateCfast():
 
     #Конструктор
     def __init__(self, proj_name, iface):
         # Save reference to the QGIS interface
         self.iface = iface
         self.proj_name = proj_name
-           
+    
     #--------------------------------------------------------------------------
     # Поиск элемента в массие bes в заданным beId
     # Если элемент находится, то возвращается, иначе создается новый элмент
@@ -119,7 +117,6 @@ class CreateTopo():
                 layersHM[floor] = {elemType : mls[lid].id()}
         # print(layerNames)
         # print(layersHM)
-        # QgsMessageLog.logMessage('{}'.format(layerNames), 'Plan Creator', level=Qgis.Info)
 
         #--------------------------------------------------------------------------
         # Для каждого уровня найдем пересечения дверей с другими слоями (комнатами, 
@@ -127,9 +124,9 @@ class CreateTopo():
         #--------------------------------------------------------------------------
         for floor in layersHM.keys():
             ###print "Process floor " + floor
-            doorsLID = layersHM[floor][TRANSITS]
-            roomsLID = layersHM[floor][ZONES]
-            stairsLID = layersHM[floor][STAIRS]
+            doorsLID = layersHM[floor]['doors']
+            roomsLID = layersHM[floor]['rooms']
+            stairsLID = layersHM[floor]['stairs']
             #Получим слои дверей, комнат и лест.клеток на данном этаже
             doors = proj.mapLayer(doorsLID)
             rooms = proj.mapLayer(roomsLID)
@@ -275,14 +272,7 @@ class CreateTopo():
         city = proj.readEntry(self.proj_name, "city", u'Ижевск')[0]
         additionalInfo = proj.readEntry(self.proj_name, "additionalInfo", u'Дополнительная информация')[0]
         
-        t = time.time()
-
-        bld = {"FileData": {}, "NameBuilding":nameOfBuilding, "Address":{}, "Level":[], "Devs":[]}
-        
-        bld_filedata = bld["FileData"]
-        bld_filedata["FormatVersion"] = BUILDINGJSON_VERSION
-        bld_filedata["CreatingData"] = time.ctime(t)
-        QgsMessageLog.logMessage('{}'.format(bld_filedata), 'Plan Creator', level=Qgis.Info)
+        bld = { "NameBuilding":nameOfBuilding, "Address":{}, "Level":[], "Devs":[]}
 
         bld_address = bld["Address"]
         bld_address["City"] = city
@@ -500,9 +490,6 @@ class CreateTopo():
                             currBE["Output"][oi] = downStairBE["Up"]        
         
         # ---------
-        return self.export_to_json(proj, bld)
-
-    def export_to_json(self, proj, bld):
         nameOfJsonFile = list(QFileDialog.getSaveFileName(None, u'Сохранить BuildingJson как...', proj.homePath(), "JSON file (*.json *.JSON)"))[0]
         if nameOfJsonFile == "":
             return
@@ -514,23 +501,6 @@ class CreateTopo():
         json.dump(bld, jsonFile, ensure_ascii=True, cls=myJSONEncoder, indent=3)
         jsonFile.close()
         self.iface.messageBar().pushMessage("Info", u'Файл JSON успешно создан.', level=Qgis.Info, duration=10)
-
-    def export_to_cfast(self, proj, bld):
-        '''
-        bld -- цифровая модель здания
-        '''
-        nameOfJsonFile = list(QFileDialog.getSaveFileName(None, u'Сохранить модель здания как...', proj.homePath(), "CFAST file (*.in)"))[0]
-        if nameOfJsonFile == "":
-            return
-
-        if not nameOfJsonFile.endswith('.in'):
-            nameOfJsonFile = '{}{}'.format(nameOfJsonFile, '.in')
-
-        # Обходим элементы этажей
-        for element in bld['Level']:
-            pass
-
-        
     
     def get_field_index(self, layer:QgsVectorLayer, field_name:str) -> int:
         return layer.fields().indexOf(field_name)

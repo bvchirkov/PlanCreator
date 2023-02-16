@@ -44,6 +44,7 @@ from .resources import *
 # Import the code for the dialog
 from .plan_creator_dialog import PlanCreatorDialogCreateProj, PlanCreatorDialogCreateLevel
 from .create_topo import CreateTopo
+from .create_cfast import CreateCfast
 
 from sys import platform
 import os.path
@@ -401,6 +402,7 @@ class PlanCreator:
     def run_create_json(self) -> None:
         topo = CreateTopo(PROJECT_NAME, self.iface)
         topo.fill_ids()
+        topo.make_topo()
         topo.make_topo()
 
     def print_info(self, text) -> None:
