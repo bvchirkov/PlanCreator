@@ -3,7 +3,7 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Plan Creator
+name=PlanCreator-3
 qgisMinimumVersion=3.0
 about=Расширение QGIS для создание цифровой модели здания
 description=Инструмент создания цифровой модели здания
@@ -22,7 +22,7 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=cad, bim
+tags=cad,bim
 
 homepage=https://github.com/bvchirkov/PlanCreator
 category=Plugins

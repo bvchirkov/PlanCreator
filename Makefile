@@ -40,7 +40,7 @@ SOURCES = \
 	__init__.py \
 	plan_creator.py plan_creator_dialog.py create_topo.py
 
-PLUGINNAME = PlanCreator
+PLUGINNAME = PlanCreator-3
 
 PY_FILES = \
 	__init__.py \
