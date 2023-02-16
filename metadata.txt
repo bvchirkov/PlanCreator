@@ -5,12 +5,11 @@
 [general]
 name=Plan Creator
 qgisMinimumVersion=3.0
+about=Расширение QGIS для создание цифровой модели здания
 description=Инструмент создания цифровой модели здания
 version=1.0
 author=bvchirkov
 email=b.v.chirkov@udsu.ru
-
-# about=
 
 tracker=https://github.com/bvchirkov/PlanCreator/issues
 repository=https://github.com/bvchirkov/PlanCreator
