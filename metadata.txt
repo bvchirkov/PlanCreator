@@ -5,9 +5,9 @@
 [general]
 name=PlanCreator-3
 qgisMinimumVersion=3.0
-about=Расширение QGIS для создание цифровой модели здания
-description=Инструмент создания цифровой модели здания
-version=1.0
+description=This plugin for create a Building Information Model
+about=Create a building information model by a 2D plans for modeling people flow in the building
+version=3.1.0
 author=bvchirkov
 email=b.v.chirkov@udsu.ru
 
@@ -26,7 +26,7 @@ tags=cad,bim
 
 homepage=https://github.com/bvchirkov/PlanCreator
 category=Plugins
-icon=icon.png
+icon=icon_l.png
 # experimental flag
 experimental=False
 

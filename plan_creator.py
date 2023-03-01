@@ -57,7 +57,7 @@ PROJECT_VERSION_MINOR = 1
 PROJECT_VERSION_PATCH = 0
 PROJECT_VERSION = "v{}.{}.{}".format(PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH)
 
-PROJECT_NAME = u'PlanCreator3'
+PROJECT_NAME = u'PlanCreator-3'
 
 class PlanCreator:
     """QGIS Plugin Implementation."""
@@ -323,6 +323,8 @@ class PlanCreator:
             return
 
         #Номер следующего этажа
+        # BUG Не увеличивается номер этажа, если перезапустить QGIS
+        # Возможно инициализируется нулем при перезапуске
         if self.BimLevelCount == None:
             self.BimLevelCount = 0
         else:
@@ -403,7 +405,7 @@ class PlanCreator:
         topo = CreateTopo(PROJECT_NAME, self.iface)
         topo.fill_ids()
         topo.make_topo()
-        topo.make_topo()
+        # topo.make_topo()
 
     def print_info(self, text) -> None:
         self.iface.messageBar().pushMessage("Info", text, level=Qgis.Info, duration=10)
