@@ -7,7 +7,7 @@ name=PlanCreator-3
 qgisMinimumVersion=3.0
 description=This plugin for create a Building Information Model
 about=Create a building information model by a 2D plans for modeling people flow in the building
-version=3.1.0
+version=3.2.0
 author=bvchirkov
 email=b.v.chirkov@udsu.ru
 
