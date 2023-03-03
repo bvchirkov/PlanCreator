@@ -109,7 +109,7 @@ class PlanCreator:
         self.QNameLevel:str = None
 
         #
-        self.BimLevelCount = None
+        self.BimLevelCount = 0
 
         #
         self.map_layer_store = QgsMapLayerStore()
@@ -322,13 +322,12 @@ class PlanCreator:
             self.print_info(u'Новый уровень не добавлен')
             return
 
-        #Номер следующего этажа
-        # BUG Не увеличивается номер этажа, если перезапустить QGIS
-        # Возможно инициализируется нулем при перезапуске
-        if self.BimLevelCount == None:
-            self.BimLevelCount = 0
-        else:
-            self.BimLevelCount += 1
+        # Get instance of the current project
+        myProject = QgsProject.instance()
+        # Get the level number by the two last symbols if layer tree of project is not empty
+        # Now layers can moved to top or bottom and numbering will right even past restart QGIS
+        if len(myProject.layerTreeRoot().layerOrder()) != 0:
+            self.BimLevelCount = int(myProject.layerTreeRoot().layerOrder()[-1].name()[-2:]) + 1
 
         self.QNameLevel = "Level_{}".format("%2.2d" % self.BimLevelCount)
         # Получение значений полей диалогового окна
@@ -344,8 +343,7 @@ class PlanCreator:
                             self.QTransitHeight = group_box_item.text()
 
         # See if OK was pressed
-        myProject = QgsProject.instance()
-        #Проверим, что проект создан правильно (что это наш проект)
+        # Проверим, что проект создан правильно (что это наш проект)
         if myProject.readEntry(PROJECT_NAME, "projectkey", "noname")[0] != "{} {}".format(PROJECT_NAME, PROJECT_VERSION):
             self.print_crit(u'Сначала необходимо создать проект для {}!'.format(PROJECT_NAME))
             return
