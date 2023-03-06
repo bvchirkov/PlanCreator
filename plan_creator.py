@@ -36,7 +36,8 @@ from qgis.core import (
     QgsMapLayerStore,
     QgsCoordinateReferenceSystem,
     QgsEditFormConfig,
-    QgsObjectCustomProperties
+    QgsObjectCustomProperties,
+    QgsMapLayerType
 )
 
 # Initialize Qt resources from file resources.py
@@ -52,12 +53,12 @@ import os
 import uuid
 import shutil
 
-PROJECT_VERSION_MAJOR = 3
-PROJECT_VERSION_MINOR = 2
-PROJECT_VERSION_PATCH = 0
-PROJECT_VERSION = "v{}.{}.{}".format(PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH)
+PLUGIN_VERSION_MAJOR = 3
+PLUGIN_VERSION_MINOR = 2
+PLUGIN_VERSION_PATCH = 0
+PLUGIN_VERSION = "v{}.{}.{}".format(PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR, PLUGIN_VERSION_PATCH)
 
-PROJECT_NAME = u'PlanCreator-3'
+PLUGIN_NAME = u'PlanCreator-3'
 
 class PlanCreator:
     """QGIS Plugin Implementation."""
@@ -79,7 +80,7 @@ class PlanCreator:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            '{}_{}.qm'.format(PROJECT_NAME, locale))
+            '{}_{}.qm'.format(PLUGIN_NAME, locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -88,7 +89,7 @@ class PlanCreator:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(PROJECT_NAME)
+        self.menu = self.tr(PLUGIN_NAME)
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -127,7 +128,7 @@ class PlanCreator:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate(PROJECT_NAME, message)
+        return QCoreApplication.translate(PLUGIN_NAME, message)
 
 
     def add_action(
@@ -207,21 +208,21 @@ class PlanCreator:
     def initGui(self) -> None:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/{}/icon_b.png'.format(PROJECT_NAME)
+        icon_path = ':/plugins/{}/icon_b.png'.format(PLUGIN_NAME)
         self.add_action(
             icon_path,
             text=self.tr(u'Начать новый проект BuildingJSON'),
             callback=self.run_create_project,
             parent=self.iface.mainWindow())
 
-        icon_path = ':/plugins/{}/icon_l.png'.format(PROJECT_NAME)
+        icon_path = ':/plugins/{}/icon_l.png'.format(PLUGIN_NAME)
         self.add_action(
             icon_path,
             text=self.tr(u'Добавить новый уровень'),
             callback=self.run_create_level,
             parent=self.iface.mainWindow())
         
-        icon_path = ':/plugins/{}/icon_j.png'.format(PROJECT_NAME)
+        icon_path = ':/plugins/{}/icon_j.png'.format(PLUGIN_NAME)
         self.add_action(
             icon_path,
             text=self.tr(u'Создать JSON'),
@@ -232,7 +233,7 @@ class PlanCreator:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(PROJECT_NAME),
+                self.tr(PLUGIN_NAME),
                 action)
             self.iface.removeToolBarIcon(action)
 
@@ -295,11 +296,11 @@ class PlanCreator:
         myProject.writeEntry("SpatialRefSys", "ProjectCRSProj4String", "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
         myProject.writeEntry("SpatialRefSys", "ProjectCRSID", 1353)
         # store some custom key values
-        myProject.writeEntry(PROJECT_NAME, "projectkey", "{} {}".format(PROJECT_NAME, PROJECT_VERSION))
-        myProject.writeEntry(PROJECT_NAME, "nameBuilding", self.QTextNameObj)
-        myProject.writeEntry(PROJECT_NAME, "streetAddress", "{}, {}".format(self.QTextStreet, self.QTextHomeNumber))
-        myProject.writeEntry(PROJECT_NAME, "city", self.QTextCity)
-        myProject.writeEntry(PROJECT_NAME, "additionalInfo", self.QTextAdditionalInfo)
+        myProject.writeEntry(PLUGIN_NAME, "projectkey", "{}:{}".format(PLUGIN_NAME, PLUGIN_VERSION))
+        myProject.writeEntry(PLUGIN_NAME, "nameBuilding", self.QTextNameObj)
+        myProject.writeEntry(PLUGIN_NAME, "streetAddress", "{}, {}".format(self.QTextStreet, self.QTextHomeNumber))
+        myProject.writeEntry(PLUGIN_NAME, "city", self.QTextCity)
+        myProject.writeEntry(PLUGIN_NAME, "additionalInfo", self.QTextAdditionalInfo)
         
         #Save new project with custom key values
         myProject.setFileName(projFileName)
@@ -327,7 +328,7 @@ class PlanCreator:
         # Get the level number by the two last symbols if layer tree of project is not empty
         # Now layers can moved to top or bottom and numbering will right even past restart QGIS
         if len(myProject.layerTreeRoot().layerOrder()) != 0:
-            self.BimLevelCount = int(myProject.layerTreeRoot().layerOrder()[-1].name()[-2:]) + 1
+            self.BimLevelCount = int(list(filter(lambda x: x.type() is QgsMapLayerType.VectorLayer, myProject.layerTreeRoot().layerOrder()))[-1].name()[-2:]) + 1
 
         self.QNameLevel = "Level_{}".format("%2.2d" % self.BimLevelCount)
         # Получение значений полей диалогового окна
@@ -344,9 +345,14 @@ class PlanCreator:
 
         # See if OK was pressed
         # Проверим, что проект создан правильно (что это наш проект)
-        if myProject.readEntry(PROJECT_NAME, "projectkey", "noname")[0] != "{} {}".format(PROJECT_NAME, PROJECT_VERSION):
-            self.print_crit(u'Сначала необходимо создать проект для {}!'.format(PROJECT_NAME))
-            return
+        if myProject.readEntry(PLUGIN_NAME, "projectkey", "noname")[0] != "{}:{}".format(PLUGIN_NAME, PLUGIN_VERSION):
+            # TODO Create the handler for old version of plugin
+            if myProject.readEntry(PLUGIN_NAME[:-2], "projectkey", "noname")[0][1]:
+                # self.print_warn(f'Проект был создан с использованием старой версии плагина. Текущая версия {PLUGIN_VERSION}')
+                pass
+            else:
+                self.print_crit(u'Сначала необходимо создать проект для {}!'.format(PLUGIN_NAME))
+                return
 
         #Скопируем шаблон уровня shp в папку проекта с переименовкой
         newSUUID = str(uuid.uuid4()).split('-')[0]
@@ -364,7 +370,7 @@ class PlanCreator:
     def copy_level_pattern(self, project:QgsProject, name:str, suffix:str) -> QgsVectorLayer:
         #copy & rename
         home_dir = project.homePath()
-        src = os.path.join(os.path.dirname(QgsApplication.qgisUserDatabaseFilePath()), "python", "plugins", PROJECT_NAME, "layers", name)
+        src = os.path.join(os.path.dirname(QgsApplication.qgisUserDatabaseFilePath()), "python", "plugins", PLUGIN_NAME, "layers", name)
         dst = shutil.copy(src + ".shp", os.path.join(home_dir, "{}-{}.shp".format(name, suffix)))
         shutil.copy(src + ".shx", os.path.join(home_dir, "{}-{}.shx".format(name, suffix)))
         shutil.copy(src + ".prj", os.path.join(home_dir, "{}-{}.prj".format(name, suffix)))
@@ -400,10 +406,9 @@ class PlanCreator:
         return new_layer
 
     def run_create_json(self) -> None:
-        topo = CreateTopo(PROJECT_NAME, self.iface)
+        topo = CreateTopo(PLUGIN_NAME, self.iface)
         topo.fill_ids()
         topo.make_topo()
-        # topo.make_topo()
 
     def print_info(self, text) -> None:
         self.iface.messageBar().pushMessage("Info", text, level=Qgis.Info, duration=10)
