@@ -55,7 +55,7 @@ import shutil
 
 PLUGIN_VERSION_MAJOR = 3
 PLUGIN_VERSION_MINOR = 2
-PLUGIN_VERSION_PATCH = 0
+PLUGIN_VERSION_PATCH = 1
 PLUGIN_VERSION = "v{}.{}.{}".format(PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR, PLUGIN_VERSION_PATCH)
 
 PLUGIN_NAME = u'PlanCreator-3'
@@ -345,14 +345,10 @@ class PlanCreator:
 
         # See if OK was pressed
         # Проверим, что проект создан правильно (что это наш проект)
-        if myProject.readEntry(PLUGIN_NAME, "projectkey", "noname")[0] != "{}:{}".format(PLUGIN_NAME, PLUGIN_VERSION):
-            # TODO Create the handler for old version of plugin
-            if myProject.readEntry(PLUGIN_NAME[:-2], "projectkey", "noname")[0][1]:
-                # self.print_warn(f'Проект был создан с использованием старой версии плагина. Текущая версия {PLUGIN_VERSION}')
-                pass
-            else:
-                self.print_crit(u'Сначала необходимо создать проект для {}!'.format(PLUGIN_NAME))
-                return
+        # if myProject.readEntry(PLUGIN_NAME, "projectkey", "noname")[0] != "{}:{}".format(PLUGIN_NAME, PLUGIN_VERSION) or \
+        if not myProject.readEntry(PLUGIN_NAME, "projectkey", "noname")[0][1] or not myProject.readEntry(PLUGIN_NAME[:-2], "projectkey", "noname")[0][1]:
+            self.print_crit(u'Сначала необходимо создать проект для {}!'.format(PLUGIN_NAME))
+            return
 
         #Скопируем шаблон уровня shp в папку проекта с переименовкой
         newSUUID = str(uuid.uuid4()).split('-')[0]
